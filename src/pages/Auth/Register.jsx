@@ -8,12 +8,14 @@ import { Toaster } from '../../components/ui/toaster';
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     name: '',
+    email: '', // Added email field
     phone: '',
     password: '',
+    password_confirmation: '', // Added for confirmation
     userType: 'customer',
     categoryId: '',
-    rate:0,
-    location:''
+    rate: 0,
+    location: ''
   });
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -61,29 +63,40 @@ export default function RegisterPage() {
     setLoading(true);
     setError('');
 
+    // Basic validation
+    if (formData.password !== formData.password_confirmation) {
+      setError("Passwords don't match");
+      setLoading(false);
+      return;
+    }
+
     try {
       // Format phone number by removing spaces
       const formattedPhone = formData.phone.replace(/\s+/g, '');
 
-      // Create FormData object
-      const formDataObj = new FormData();
-      formDataObj.append('name', formData.name);
-      formDataObj.append('phone', formattedPhone);
-      formDataObj.append('password', formData.password);
-      formDataObj.append('userType', formData.userType);
-      formDataObj.append('rate', formData.rate);
-      formDataObj.append('location', formData.location);
-      
-      if (formData.userType === 'provider' && formData.categoryId) {
-        formDataObj.append('categoryId', formData.categoryId);
+      // Prepare the data object
+      const requestData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formattedPhone,
+        password: formData.password,
+        password_confirmation: formData.password_confirmation,
+      };
+
+      // Determine the endpoint based on user type
+      const endpoint = formData.userType === 'provider' 
+        ? '/register' 
+        : '/client';
+
+      // Add provider-specific fields if needed
+      if (formData.userType === 'provider') {
+        requestData.category_id = formData.categoryId;
+        requestData.rate = formData.rate;
+        requestData.location = formData.location;
       }
 
       // Send registration request to Laravel backend
-      const response = await api.post('/register', formDataObj, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const response = await api.post(endpoint, requestData);
 
       // Show success notification
       toast({
@@ -95,7 +108,9 @@ export default function RegisterPage() {
       setTimeout(() => navigate('/login'), 1500);
     } catch (err) {
       console.error('Registration error:', err);
-      const errorMessage = err.response?.data?.message || 'Registration failed. Please try again.';
+      const errorMessage = err.response?.data?.message || 
+                         err.response?.data?.error || 
+                         'Registration failed. Please try again.';
       setError(errorMessage);
       toast({
         title: "Registration failed",
@@ -128,6 +143,21 @@ export default function RegisterPage() {
               type="text"
               className="w-full pl-10 border rounded-md p-2"
               value={formData.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Email</label>
+          <div className="relative">
+            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <input
+              name="email"
+              type="email"
+              className="w-full pl-10 border rounded-md p-2"
+              value={formData.email}
               onChange={handleChange}
               required
             />
@@ -170,6 +200,22 @@ export default function RegisterPage() {
         </div>
 
         <div>
+          <label className="block text-sm font-medium mb-1">Confirm Password</label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <input
+              name="password_confirmation"
+              type="password"
+              className="w-full pl-10 border rounded-md p-2"
+              value={formData.password_confirmation}
+              onChange={handleChange}
+              required
+              minLength={6}
+            />
+          </div>
+        </div>
+
+        <div>
           <label className="block text-sm font-medium mb-1">I want to:</label>
           <select
             name="userType"
@@ -183,35 +229,61 @@ export default function RegisterPage() {
         </div>
 
         {formData.userType === 'provider' && (
-          <div>
-            <label className="block text-sm font-medium mb-1">Service Category</label>
-            <div className="relative">
-              <Briefcase className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <select
-                name="categoryId"
-                className="w-full pl-10 border rounded-md p-2"
-                value={formData.categoryId}
-                onChange={handleChange}
-                required={formData.userType === 'provider'}
-                disabled={categoriesLoading}
-              >
-                <option value="">
-                  {categoriesLoading ? "Loading categories..." : "Select your service category"}
-                </option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Service Category</label>
+              <div className="relative">
+                <Briefcase className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <select
+                  name="categoryId"
+                  className="w-full pl-10 border rounded-md p-2"
+                  value={formData.categoryId}
+                  onChange={handleChange}
+                  required={formData.userType === 'provider'}
+                  disabled={categoriesLoading}
+                >
+                  <option value="">
+                    {categoriesLoading ? "Loading categories..." : "Select your service category"}
                   </option>
-                ))}
-              </select>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {categoriesLoading && (
+                <p className="text-xs text-gray-500 mt-1">Loading service categories...</p>
+              )}
             </div>
-            {categoriesLoading && (
-              <p className="text-xs text-gray-500 mt-1">Loading service categories...</p>
-            )}
-            <label className="block text-sm font-medium mb-1">Your Hourly rate ?</label>
-            <input type="number" name="rate" id="rate" placeholder='hourly rate'  value={formData.rate} onChange={handleChange}/>
-            <label className="block text-sm font-medium mb-1">Your Address</label>
-            <textarea name="location" id="location" placeholder='type tour location here ...' value={formData.location} onChange={handleChange} />
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Your Hourly Rate (DH)</label>
+              <input 
+                type="number" 
+                name="rate" 
+                className="w-full border rounded-md p-2"
+                placeholder="Hourly rate"  
+                value={formData.rate} 
+                onChange={handleChange}
+                min="0"
+                step="10"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Your Address</label>
+              <textarea 
+                name="location" 
+                className="w-full border rounded-md p-2"
+                placeholder="Type your location here..." 
+                value={formData.location} 
+                onChange={handleChange}
+                required
+                rows={3}
+              />
+            </div>
           </div>
         )}
 

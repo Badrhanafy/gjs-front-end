@@ -12,7 +12,7 @@ export default function AccountSidebar({ isOpen, onClose }) {
     const [isClosing, setIsClosing] = useState(false);
     const [provider, setProvider] = useState(null);
     const [loading, setLoading] = useState(true);
-
+    const token = localStorage.getItem('access_token')
     // Fetch provider data when sidebar opens
     useEffect(() => {
         if (isOpen) {
@@ -69,20 +69,40 @@ export default function AccountSidebar({ isOpen, onClose }) {
     }, [isOpen]);
 
     const handleLogout = async () => {
-        try {
-            await api.post('/logout');
+  try {
+    // جلب الـ token من localStorage
+    const token = localStorage.getItem('access_token');
 
-            // Clear local state
-            logout();
+    // إرسال طلب logout للـ API
+    await api.post(
+      '/logout',
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-            // Redirect to login
-            navigate('/login');
+    // حدف التوكن من localStorage
+    localStorage.removeItem('access_token');
 
-        } catch (error) {
-            console.error('Logout failed:', error);
-            // Optionally show error to user
-        }
-    };
+    // ممكن تمسح حتى بيانات أخرى للمستخدم إذا بغيت
+    // localStorage.removeItem('user');
+
+    // إعادة توجيه لصفحة تسجيل الدخول
+    navigate('/login');
+
+  } catch (error) {
+    console.error('Logout failed:', error.response?.data || error.message);
+
+    // حتى لو فشل الطلب، نحذف التوكن ونوجه المستخدم
+    localStorage.removeItem('access_token');
+    navigate('/login');
+  }
+};
+
+
 
     return (
         <>
@@ -135,6 +155,7 @@ export default function AccountSidebar({ isOpen, onClose }) {
                     >
                         <X className="h-5 w-5 text-gray-500" />
                     </button>
+
                 </div>
 
                 {/* Navigation Links */}
@@ -210,6 +231,7 @@ export default function AccountSidebar({ isOpen, onClose }) {
                         <span>{t('logout')}</span>
                     </button>
                 </nav>
+                <img src="Dari services.png" alt="" srcset="" />
             </div>
         </>
     );

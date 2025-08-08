@@ -13,10 +13,15 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showLoginTip, setShowLoginTip] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const { t, i18n } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const searchInputRef = useRef(null);
+  const accountButtonRef = useRef(null);
+  const loginTipRef = useRef(null);
+  const hoverTimeoutRef = useRef(null);
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -44,6 +49,22 @@ export default function Header() {
     }
   }, [isSearchOpen]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (loginTipRef.current && !loginTipRef.current.contains(event.target)) {
+        // Check if the click was not on the account button
+        if (accountButtonRef.current && !accountButtonRef.current.contains(event.target)) {
+          setShowLoginTip(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
     setCurrentLanguage(lng);
@@ -59,6 +80,62 @@ export default function Header() {
     setSearchQuery('');
   };
 
+  const handleAccountClick = () => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      setIsAccountOpen(true);
+      setShowLoginTip(false);
+      
+    } else {
+      setShowLoginTip(true);
+      // Clear any pending hide timeout
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+      }
+    }
+  };
+
+  const handleAccountHover = () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setIsHovering(true);
+      // Clear any pending hide timeout
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+      }
+      setShowLoginTip(true);
+    }
+  };
+
+  const handleAccountLeave = () => {
+    setIsHovering(false);
+    // Only start hiding if not hovering over the tip itself
+    if (!loginTipRef.current?.matches(':hover')) {
+      hoverTimeoutRef.current = setTimeout(() => {
+        if (!isHovering) {
+          setShowLoginTip(false);
+        }
+      }, 300); // 300ms delay before hiding
+    }
+  };
+
+  const handleTipHover = () => {
+    // Clear any pending hide timeout when hovering the tip
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+  };
+
+  const handleTipLeave = () => {
+    // Start hiding after a delay when leaving the tip
+    hoverTimeoutRef.current = setTimeout(() => {
+      setShowLoginTip(false);
+    }, 300); // 300ms delay before hiding
+  };
+
   return (
     <>
       <header className="bg-white shadow-sm sticky top-0 z-40">
@@ -66,7 +143,7 @@ export default function Header() {
           <nav className="flex items-center justify-between">
             {/* Logo on the left */}
             <Link to="/" className="text-xl font-bold text-blue-600">
-              <img src="Dari Company.png" alt="" srcset="" width={'100vh'} height={"5vh"} />
+              <img src="Dari Company.png" alt="" srcSet="" width={'100vh'} height={"5vh"} />
             </Link>
             
             {/* Desktop Navigation - Centered links */}
@@ -138,16 +215,59 @@ export default function Header() {
               )}
               
               {/* User account - Always visible */}
-              <button 
-                id="user-icon"
-                onClick={() => setIsAccountOpen(true)}
-                className="flex items-center text-gray-700 hover:text-blue-600"
-                title={t('account')}
-              >
-                <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-blue-100 transition-colors">
-                  <User className="h-5 w-5" />
-                </div>
-              </button>
+              <div className="relative">
+                <button 
+                  ref={accountButtonRef}
+                  id="user-icon"
+                  onClick={handleAccountClick}
+                  onMouseEnter={handleAccountHover}
+                  onMouseLeave={handleAccountLeave}
+                  className="flex items-center text-gray-700 hover:text-blue-600"
+                  title={t('account')}
+                >
+                  <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-blue-100 transition-colors">
+                    <User className="h-5 w-5" />
+                  </div>
+                </button>
+
+                {/* Login tip dialog */}
+                {showLoginTip && (
+                  <div 
+                    ref={loginTipRef}
+                    onMouseEnter={handleTipHover}
+                    onMouseLeave={handleTipLeave}
+                    className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 px-3 z-50 transition-opacity duration-200"
+                    style={{
+                      animation: 'fadeInUp 0.2s ease-out forwards',
+                      opacity: showLoginTip ? 1 : 0,
+                      pointerEvents: showLoginTip ? 'auto' : 'none'
+                    }}
+                  >
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 pt-0.5">
+                        <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900">
+                          {t('login_required')}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {t('login_to_access_account')}
+                        </p>
+                        <div className="mt-2">
+                          <Link
+                            to="/login"
+                            onClick={() => setShowLoginTip(false)}
+                            className="text-xs font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                          >
+                            {t('sign_in')} &rarr;
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Mobile menu button - Only on mobile */}
               {isMobile && (
@@ -273,6 +393,16 @@ export default function Header() {
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+          from { 
+            opacity: 0;
+            transform: translateY(5px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         .animate-fade-in {
           animation: fadeIn 0.3s ease-out forwards;
