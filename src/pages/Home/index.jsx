@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, Hammer, Zap, Sparkles, ChevronLeft, ChevronRight, CheckCircle, Star } from 'lucide-react';
 import api from '../../api';
 import Slider from 'react-slick';
-import "slick-carousel/slick/slick.css"; 
+import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 export default function HomePage() {
@@ -42,7 +42,7 @@ export default function HomePage() {
   function SampleNextArrow(props) {
     const { onClick } = props;
     return (
-      <button 
+      <button
         onClick={onClick}
         className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white p-2 rounded-full shadow-md"
         aria-label="Next slide"
@@ -55,7 +55,7 @@ export default function HomePage() {
   function SamplePrevArrow(props) {
     const { onClick } = props;
     return (
-      <button 
+      <button
         onClick={onClick}
         className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white p-2 rounded-full shadow-md"
         aria-label="Previous slide"
@@ -89,38 +89,38 @@ export default function HomePage() {
               <div className="container mx-auto px-6 text-white">
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">Find Trusted Professionals</h1>
                 <p className="text-xl mb-8 max-w-2xl">Connect with skilled service providers for all your home needs</p>
-                <Link 
-                  to="/services" 
+                <Link
+                  to="/services"
                   className="inline-block bg-white text-blue-900 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition"
                 >
                   Browse Services
                 </Link>
               </div>
             </div>
-            <img 
-              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
-              alt="Home services" 
+            <img
+              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+              alt="Home services"
               className="w-full h-full object-cover"
             />
           </div>
-          
+
           {/* Slide 2 */}
           <div className="relative h-96 md:h-[500px]">
             <div className="absolute inset-0 bg-green-900/70 flex items-center">
               <div className="container mx-auto px-6 text-white">
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">Quality Services Guaranteed</h1>
                 <p className="text-xl mb-8 max-w-2xl">We verify all professionals to ensure you get the best service</p>
-                <Link 
-                  to="/how-it-works" 
+                <Link
+                  to="/how-it-works"
                   className="inline-block bg-white text-green-900 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition"
                 >
                   Learn How It Works
                 </Link>
               </div>
             </div>
-            <img 
-              src="https://images.unsplash.com/photo-1558002038-1055907df827?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
-              alt="Quality services" 
+            <img
+              src="https://images.unsplash.com/photo-1558002038-1055907df827?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+              alt="Quality services"
               className="w-full h-full object-cover"
             />
           </div>
@@ -134,9 +134,9 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-grow">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search for services..." 
+              <input
+                type="text"
+                placeholder="Search for services..."
                 className="w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -155,7 +155,7 @@ export default function HomePage() {
             Professional services for all your needs
           </p>
         </div>
-        
+
         {/* Residential Services */}
         <div className="mb-16">
           <div className="flex items-center mb-8">
@@ -167,10 +167,10 @@ export default function HomePage() {
             {categories.filter(c => c.type === 'residential' || !c.type).map((category) => (
               <Link
                 key={category.id}
-                to={`/services?category=${category.slug || category.name.toLowerCase()}`}
-                className="bg-white border rounded-xl p-6 hover:shadow-lg transition-all duration-300 flex flex-col items-center text-center"
+                to={`/category-name/${encodeURIComponent(category.name.toLowerCase().replace(/\s+/g, '-'))}`}
+                className="bg-white border rounded-xl p-6 hover:shadow-lg transition-all duration-300 flex flex-col items-center text-center group"
               >
-                <div className="bg-blue-100 p-4 rounded-full mb-4">
+                <div className="bg-blue-100 p-4 rounded-full mb-4 group-hover:bg-blue-200 transition-colors">
                   {categoryIcons[category.slug] || <Hammer className="w-8 h-8 text-blue-600" />}
                 </div>
                 <h3 className="font-semibold text-lg mb-2">{category.name}</h3>
@@ -179,7 +179,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-        
+
         {/* Commercial Services */}
         {categories.some(c => c.type === 'commercial') && (
           <div className="mb-16">
@@ -192,10 +192,10 @@ export default function HomePage() {
               {categories.filter(c => c.type === 'commercial').map((category) => (
                 <Link
                   key={category.id}
-                  to={`/services?category=${category.slug || category.name.toLowerCase()}`}
-                  className="bg-white border rounded-xl p-6 hover:shadow-lg transition-all duration-300 flex flex-col items-center text-center"
+                  to={`/category-name/${category.slug || encodeURIComponent(category.name.toLowerCase().replace(/\s+/g, '-'))}`}
+                  className="bg-white border rounded-xl p-6 hover:shadow-lg transition-all duration-300 flex flex-col items-center text-center group"
                 >
-                  <div className="bg-blue-100 p-4 rounded-full mb-4">
+                  <div className="bg-blue-100 p-4 rounded-full mb-4 group-hover:bg-blue-200 transition-colors">
                     {categoryIcons[category.slug] || <Hammer className="w-8 h-8 text-blue-600" />}
                   </div>
                   <h3 className="font-semibold text-lg mb-2">{category.name}</h3>
@@ -252,14 +252,14 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold mb-4">Need Help With a Project?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">Find the right professional for your needs today</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link 
-              to="/services" 
+            <Link
+              to="/services"
               className="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition"
             >
               Browse Services
             </Link>
-            <Link 
-              to="/contact" 
+            <Link
+              to="/contact"
               className="bg-transparent border-2 border-white px-8 py-3 rounded-lg font-medium hover:bg-white/10 transition"
             >
               Contact Us

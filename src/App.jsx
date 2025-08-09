@@ -10,6 +10,7 @@ import Layout from './components/layout/Layout';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 import ProfilePage from './components/layout/ProfilePage';
+import CategoryServices from './pages/Home/CategoryServices';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -22,7 +23,8 @@ const router = createBrowserRouter([
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: '*', element: <NotFoundPage /> },
-      { path: '/account', element: <ProfilePage /> }
+      { path: '/account', element: <ProfilePage /> },
+      { path: '/category-name/:categoryName', element: <CategoryServices /> }
     ]
   }
 ]);
